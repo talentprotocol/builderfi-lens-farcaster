@@ -1,0 +1,133 @@
+{
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true,
+    "es2021": true,
+    "commonjs": true,
+    "jest": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "airbnb-base",
+    "prettier"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/*.ts",
+        "**/*.tsx"
+      ],
+      "env": {
+        "browser": true,
+        "es6": true,
+        "node": true
+      },
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+      ],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "ecmaFeatures": {
+          "jsx": true
+        },
+        "ecmaVersion": 2021,
+        "sourceType": "module",
+        "project": "./tsconfig.json"
+      },
+      "plugins": [
+        "@typescript-eslint"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": 0
+      }
+    }
+  ],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "requireConfigFile": false,
+    "babelOptions": {
+      "presets": []
+    }
+  },
+  "plugins": [
+    "import",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/ban-ts-comment": 0,
+    "class-methods-use-this": 0,
+    "no-unused-expressions": [
+      "error",
+      {
+        "allowTaggedTemplates": true,
+        "allowShortCircuit": true
+      }
+    ],
+    "no-underscore-dangle": 0,
+    "consistent-return": 0,
+    "jsx-a11y/anchor-is-valid": 0,
+    "import/no-extraneous-dependencies": 0,
+    "import/no-unresolved": 0,
+    "import/extensions": 0,
+    "no-case-declarations": 0,
+    "import/order": [
+      "warn",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          [
+            "sibling",
+            "index"
+          ],
+          "parent",
+          "unknown"
+        ],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ],
+    "no-nested-ternary": [
+      "warn"
+    ],
+    "import/prefer-default-export": 0,
+    "arrow-body-style": [
+      "warn"
+    ],
+    "no-console": [
+      "off"
+    ],
+    "default-param-last": 0,
+    "no-return-await": [
+      "warn"
+    ],
+    "no-param-reassign": 0,
+    "no-plusplus": 0,
+    "no-use-before-define": [
+      0
+    ],
+    "@typescript-eslint/no-shadow": "error",
+    "no-shadow": "off",
+    "radix": [
+      "warn"
+    ],
+    "no-return-assign": 0,
+    "global-require": [
+      "warn"
+    ],
+    "valid-typeof": 0,
+    "no-restricted-exports": [
+      "warn"
+    ],
+    "no-bitwise": [
+      "warn"
+    ]
+  }
+}
