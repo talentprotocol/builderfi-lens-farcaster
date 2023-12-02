@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model User {
+  //wallet that will be used for transactions
+  wallet                      String    @unique @db.VarChar(50)
+  //Wallet that will be used to fetch social info of the user
+  socialWallet                String?   @unique @db.VarChar(50)
+  privyUserId                 String?   @unique
+  //Each social platform can have it's own avatar and name. One will be chosen as the main one
+  displayName                 String?   @db.VarChar(255)
+  avatarUrl                   String?   @db.VarChar(500)
+  isActive                    Boolean   @default(false)
+  isAdmin                     Boolean   @default(false)
+  hasFinishedOnboarding       Boolean   @default(false)
+  lastRecommendationsSyncedAt DateTime?
+
+  questions      Question[]      @relation("questioner")
+  replies        Question[]      @relation("replier")
+  inviteCodes    InviteCode[]
+  comments       Comment[]
+  invitedBy      InviteCode?     @relation("invitation", fields: [invitedById], references: [id])
+  invitedById    Int?
+  points         Points[]
+  reactions      Reaction[]
+  socialProfiles SocialProfile[]
+
+  recommendedTo    RecommendedUser[] @relation("recommendationTarget")
+  recommendedUsers RecommendedUser[] @relation("recommendationSource")
+
+  id               Int                @id @default(autoincrement())
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  SigningChallenge SigningChallenge[]
+}
+
+enum SocialProfileType {
+  FARCASTER
+  LENS
+  TALENT_PROTOCOL
+  ENS
+}
+
+model SocialProfile {
+  type         SocialProfileType
+  profileName  String            @db.VarChar(255)
+  profileImage String?           @db.VarChar(500)
+  user         User              @relation(fields: [userId], references: [id])
+  userId       Int
+  //Just in case we need to store data specific to each social platform
+  socialData   Json?
+
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //Only 1 profile type per user
+  @@unique([userId, type])
+}
+
+model Question {
+  questionContent String     @db.VarChar(500)
+  questioner      User       @relation("questioner", fields: [questionerId], references: [id])
+  questionerId    Int
+  reply           String?    @db.VarChar
+  replier         User       @relation("replier", fields: [replierId], references: [id])
+  replierId       Int
+  repliedOn       DateTime?
+  comments        Comment[]
+  reactions       Reaction[]
+
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  content    String   @db.VarChar(500)
+  question   Question @relation(fields: [questionId], references: [id])
+  questionId Int
+  author     User     @relation(fields: [authorId], references: [id])
+  authorId   Int
+
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+  LOVE
+  HATE
+  LAUGH
+  CRY
+  ANGRY
+  SURPRISED
+}
+
+model Reaction {
+  reactionType ReactionType
+  user         User         @relation(fields: [userId], references: [id])
+  userId       Int
+  question     Question     @relation(fields: [questionId], references: [id])
+  questionId   Int
+
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, questionId])
+}
+
+model InviteCode {
+  code        String  @unique @db.VarChar(50)
+  user        User    @relation(fields: [userId], references: [id])
+  userId      Int
+  invitations User[]  @relation("invitation")
+  maxUses     Int
+  used        Int
+  isActive    Boolean @default(false)
+
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Points {
+  description String  @db.VarChar(500)
+  user        User    @relation(fields: [userId], references: [id])
+  userId      Int
+  points      Int
+  hidden      Boolean
+
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RecommendedUser {
+  id    Int  @id @default(autoincrement())
+  for   User @relation(fields: [forId], references: [id], name: "recommendationSource")
+  forId Int
+
+  user           User?   @relation(fields: [userId], references: [id], name: "recommendationTarget")
+  userId         Int?
+  wallet         String
+  avatarUrl      String?
+  name           String?
+  ens            String?
+  farcaster      String?
+  lens           String?
+  talentProtocol String?
+
+  recommendationScore Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([forId, wallet])
+}
+
+model SigningChallenge {
+  message   String
+  user      User   @relation(fields: [userId], references: [id])
+  userId    Int    @unique
+  publicKey String
+
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

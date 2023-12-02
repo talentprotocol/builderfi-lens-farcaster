@@ -12,9 +12,9 @@ interface Cast {
 export const getCasts = async (
   query: string,
   after?: number,
-  options: { page?: number; count?: number } = { page: 0, count: 10 }
+  options: { page?: number; count?: number } = { count: 10 }
 ): Promise<Cast[]> => {
-  let page = options.page || 0;
+  let page = 0;
   const { count } = options;
   const searchCasterBaseUrl = new URL('https://searchcaster.xyz/api/search');
   if (query) {
