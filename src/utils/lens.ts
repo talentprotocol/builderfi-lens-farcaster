@@ -4,7 +4,7 @@ export const getLensPublications = async (
   query: string,
   after?: number,
   options: { limit?: LimitType } = { limit: LimitType.Fifty }
-) => {
+): Promise<PrimaryPublicationFragment[]> => {
   const client = new LensClient({
     environment: development,
   });

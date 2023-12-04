@@ -1,17 +1,28 @@
-import { LimitType } from '@lens-protocol/client';
+import { LimitType, PrimaryPublicationFragment } from '@lens-protocol/client';
+import { SocialProfileType } from '@prisma/client';
 
-import { SocialProfileType, getSocialProfiles } from './prisma/social-profile';
-import { getCasts } from './utils/farcaster';
+import { getSocialProfiles } from './prisma/social-profile';
+import { Cast, getCasts } from './utils/farcaster';
 import { getLensPublications } from './utils/lens';
+import { farcasterCastToPost, lensPublicationToPost } from './utils/post';
 
 export const syncPosts = async (after: number) => {
   const farcasterPosts = await fetchBuilderFIFarcasterPosts(after);
   const lensPosts = await fetchBuilderFILensPosts(after);
 
-  return { farcasterPosts, lensPosts };
+  const formattedFarcasterPosts = farcasterPosts.map((post) => farcasterCastToPost(post));
+  const formattedLensPosts = lensPosts.map((post) => lensPublicationToPost(post));
+
+  return [...formattedFarcasterPosts, ...formattedLensPosts];
 };
 
-const fetchBuilderFIFarcasterPosts = async (after: number) => {
+const fetchBuilderFIFarcasterPosts = async (
+  after: number
+): Promise<
+  (Cast & {
+    builderFIUserId: number;
+  })[]
+> => {
   // fetch all posts from Farcaster including 'builderfi' after the given timestamp
   const farcasterPosts = await getCasts('builderfi', after, { count: 100 });
 
@@ -20,14 +31,28 @@ const fetchBuilderFIFarcasterPosts = async (after: number) => {
   const farcasterSocialProfiles = await getSocialProfiles(farcasterProfileNames, SocialProfileType.FARCASTER);
 
   // filter farcaster posts to only include posts that have been published by a user that is already on BuilderFI
-  const farcasterPostsFromExistingUsers = farcasterPosts.filter((post) => {
-    const socialProfile = farcasterSocialProfiles.data.find((profile) => profile.profileName === post.username);
-    return !!socialProfile;
-  });
+  const farcasterPostsFromExistingUsers = farcasterPosts
+    .map((post) => {
+      const socialProfile = farcasterSocialProfiles.data.find((profile) => profile.profileName === post.username);
+      if (!socialProfile) {
+        return null;
+      }
+      return {
+        ...post,
+        builderFIUserId: socialProfile.userId,
+      };
+    })
+    .filter(Boolean);
   return farcasterPostsFromExistingUsers;
 };
 
-const fetchBuilderFILensPosts = async (after: number) => {
+const fetchBuilderFILensPosts = async (
+  after: number
+): Promise<
+  (PrimaryPublicationFragment & {
+    builderFIUserId: number;
+  })[]
+> => {
   // fetch all posts from Lens including 'builderfi' after the given timestamp
   const lensPosts = await getLensPublications('builderfi', after, { limit: LimitType.Fifty });
   const lensProfileNames = lensPosts.map((post) => post.by.handle.fullHandle);
@@ -36,9 +61,19 @@ const fetchBuilderFILensPosts = async (after: number) => {
   const lensSocialProfiles = await getSocialProfiles(lensProfileNames, SocialProfileType.LENS);
 
   // filter lens posts to only include posts that have been published by a user that is already on BuilderFI
-  const lensPostsFromExistingUsers = lensPosts.filter((post) => {
-    const socialProfile = lensSocialProfiles.data.find((profile) => profile.profileName === post.by.handle.fullHandle);
-    return !!socialProfile;
-  });
+  const lensPostsFromExistingUsers = lensPosts
+    .map((post) => {
+      const socialProfile = lensSocialProfiles.data.find(
+        (profile) => profile.profileName === post.by.handle.fullHandle
+      );
+      if (!socialProfile) {
+        return null;
+      }
+      return {
+        ...post,
+        builderFIUserId: socialProfile.userId,
+      };
+    })
+    .filter(Boolean);
   return lensPostsFromExistingUsers;
 };
