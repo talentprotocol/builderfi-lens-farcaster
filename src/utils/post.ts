@@ -11,17 +11,15 @@ export interface Post {
   id: string;
   builderFIUserId: number;
   username: string;
-  contentId: string;
   publishedAt: string;
   source: PostSource;
 }
 
 export const farcasterCastToPost = (cast: Cast & { builderFIUserId: number }): Post => ({
-  id: cast.data.threadMerkleRoot,
+  id: cast.body.data.threadMerkleRoot,
   builderFIUserId: cast.builderFIUserId,
-  username: cast.username,
-  contentId: cast.data.threadMerkleRoot,
-  publishedAt: new Date(cast.publishedAt).toISOString(),
+  username: cast.body.username,
+  publishedAt: new Date(cast.body.publishedAt).toISOString(),
   source: PostSource.FARCASTER,
 });
 
@@ -29,7 +27,6 @@ export const lensPublicationToPost = (post: PrimaryPublicationFragment & { build
   id: post.id,
   builderFIUserId: post.builderFIUserId,
   username: post.by.handle.fullHandle,
-  contentId: post.id,
   publishedAt: new Date(post.createdAt).toISOString(),
   source: PostSource.LENS,
 });

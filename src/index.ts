@@ -14,16 +14,8 @@ export const sync = async (event: APIGatewayProxyEvent, _context: Context, callb
   }
 
   const body = event?.body ? JSON.parse(event?.body) : null;
-  if (!body || !body.after) {
-    console.error('Missing event body.');
-    callback(
-      null,
-      prepareResponse(400, "Invalid body. Please make sure to include a numeric 'after' value in the body.")
-    );
-    return;
-  }
   try {
-    await syncPosts(body.after);
+    await syncPosts(body?.after);
   } catch (error) {
     console.error('Sync failed because:', { error, body });
     callback(null, prepareResponse(500, 'Something went wrong!', error));
@@ -33,4 +25,4 @@ export const sync = async (event: APIGatewayProxyEvent, _context: Context, callb
   callback(null, prepareResponse(200, 'Done!'));
 };
 
-syncPosts(new Date('2023-11-29').getTime()).then(() => console.log('done'));
+syncPosts(new Date('2023-10-29').getTime()).then(() => console.log('done'));

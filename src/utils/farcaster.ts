@@ -1,11 +1,27 @@
 export interface Cast {
-  publishedAt: number;
-  username: string;
-  data: {
-    text: string;
-    image: string | null;
-    replyParentMerkleRoot: string | null;
-    threadMerkleRoot: string;
+  body: {
+    publishedAt: number;
+    username: string;
+    data: {
+      text: string;
+      image: string | null;
+      replyParentMerkleRoot: string | null;
+      threadMerkleRoot: string;
+    };
+  };
+  merkleRoot: string;
+  meta: {
+    reactions: {
+      count: number;
+      type: 'Like';
+    };
+    recasts: {
+      count: number;
+    };
+    numReplyChildren: number;
+    watches: {
+      count: number;
+    };
   };
 }
 
@@ -38,7 +54,8 @@ export const getCasts = async (
       const response = await fetch(searchCasterBaseUrl.toString());
       // eslint-disable-next-line no-await-in-loop
       const data = await response.json();
-      const { count: newCount, casts } = data.meta;
+      const { casts, meta } = data;
+      const { count: newCount } = meta;
       castsData.push(...casts);
       if (newCount < count) {
         shouldStop = true;

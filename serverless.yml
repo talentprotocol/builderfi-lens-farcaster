@@ -1,0 +1,29 @@
+provider:
+  name: aws
+  region: eu-central-1
+  runtime: nodejs18.x
+  timeout: 900
+
+
+frameworkVersion: '3'
+
+service: builderfi-social-posts
+
+functions:
+  httpFunction:
+    handler: src/index.sync
+    events:
+      - httpApi:
+          path: /src
+          method: post
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-dotenv-plugin
+
+package:
+  patterns:
+    - '!node_modules/.prisma/client/libquery_engine-*'
+    - 'node_modules/.prisma/client/libquery_engine-rhel-*'
+    - '!node_modules/prisma/libquery_engine-*'
+    - '!node_modules/@prisma/engines/**'
